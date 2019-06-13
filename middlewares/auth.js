@@ -1,30 +1,32 @@
-var jwt = require( 'jsonwebtoken' );
+var jwt = require( 'jsonwebtoken' ); // libreria para crear tokens
 
-var SEED = require( '../config/config' ).SEED;
+var SEED = require( '../config/config' ).SEED; // imoportar el SEED para decifrar el token
 
-// Verificar token
-exports.verificaToken = function( Request, Response, Next ) {
+// ===========================================
+// verificar token
+// ===========================================
+exports.verificaToken = function( request, response, next ) {
 
-	var token = Request.query.token;
+	var token = request.query.token;
 
 	jwt.verify( token, SEED, ( error, decoded ) => {
 
 		if( error ) {
 
-			return Response.status( 401 ).json( { // 401: No autorizado (Unauthorize)
+			return response.status( 401 ).json( { // status 401: No autorizado
 
-				ok: false,
-				mensaje: 'Token incorrecto',
-				errors: error
+				ok: false, 
+				mensaej: 'Token incorrecto',
+				errorr: error
 
 			} );
 
 		}
 
-		Request.usuario = decoded.usuario;
+		request.usuario = decoded.usuario;
 
-		// para indicar que tiene que continuar sobre la ruta que se llamo
-		Next();
+		// continuar con el método que fué llamado
+		next();
 
 	} );
 

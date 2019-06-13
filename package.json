@@ -1,7 +1,7 @@
 {
   "name": "backend-server",
   "version": "1.0.0",
-  "description": "Servidor backend del curso de angular avanzado",
+  "description": "Servidor backend del curso de Angular Avanzado",
   "main": "index.js",
   "scripts": {
     "start": "nodemon app.js",
@@ -13,8 +13,13 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
+    "express-fileupload": "^1.1.5",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.5.12",
-    "mongoose-unique-validator": "^2.0.3"
+    "mongoose": "^5.5.14",
+    "mongoose-unique-validator": "^2.0.3",
+    "serve-index": "^1.9.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1"
   }
 }

@@ -1,50 +1,51 @@
 // Requires: importación de librerias
 var express = require( 'express' ); // libreria del servidor express
-var bcrypt = require( 'bcryptjs' ); // libreria para hacer encriptaciones
 
-var middlewareAuth = require( '../middlewares/auth' ); // middleware de autenticación
+var middlewareAuth = require( '../middlewares/auth' ); // middleware de autentiación
+
 
 // Inicializar variables
-var app = express(); // inicializar servidor express
+var app = express(); // Inicializar servidor express
 
 
-// Importar el modelo de usuario
-var Usuario = require( '../models/usuario' );
+// Importar el modelo de hospital
+var Hospital = require( '../models/hospital' );
 
 
 // ===========================================
-// obtener usuarios
+// obtener hospitales
 // ===========================================
 app.get( '/', ( request, response ) => {
 
 	var desde = request.query.desde || 0;
 	desde = Number( desde );
 
-	Usuario.find( {}, 'nombre email img role' )
+	Hospital.find( {} )
 		.skip( desde ) // desde que número de registro empezar
 		.limit( 5 ) // 5 registros por página
-		.exec( ( error, usuarios ) => {
+		.populate( 'usuario', 'nombre email' ) // para obtener usuario relacionado
+		.exec( ( error, hospitales ) => {
 
 			if( error ) {
 
 				// enviar respuesta
 				return response.status( 500 ).json( { // status 500: Error interno del servidor
 
-					ok: false,
-					mensaje: 'Error al obtener usuarios.',
+					ok: false, 
+					mensaje: 'Error al obtener hospitales',
 					errors: error
 
 				} );
 
 			}
 
-			Usuario.count( {}, ( error, cantReg ) => {
+			Hospital.count( {}, ( error, cantReg ) => {
 
 				// enviar respuesta
-				response.status( 200 ).json( { // status 200: OK
+				response.status( 200 ).json( { // status 200: Ok
 
 					ok: true,
-					usuarios: usuarios,
+					hospitales: hospitales,
 					numRows: cantReg
 
 				} );
@@ -57,30 +58,28 @@ app.get( '/', ( request, response ) => {
 
 
 // ===========================================
-// crear usuarios
+// crear hospitales
 // ===========================================
 app.post( '/', middlewareAuth.verificaToken, ( request, response ) => {
 
-	var body = request.body; // solo funciona con el body-parser
+	var body = request.body; // solo funciona con el body parser
 
-	var usuario = Usuario( {
+	var hospital = Hospital( {
 
 		nombre: body.nombre,
-		email: body.email,
-		password: bcrypt.hashSync( body.password, 10 ),
 		img: body.img,
-		role: body.role
+		usuario: request.usuario._id
 
 	} );
 
-	usuario.save( ( error, usuarioCreado ) => {
+	hospital.save( ( error, hospitalCreado ) => {
 
 		if( error ) {
 
 			return response.status( 400 ).json( { // status 400: Solicitud incorrecta
 
-				ok: false,
-				mensaje: 'Error al crear nuevo usuario.',
+				ok: false, 
+				mensaje: 'Error al crear nuevo hospital.',
 				errors: error
 
 			} );
@@ -91,8 +90,7 @@ app.post( '/', middlewareAuth.verificaToken, ( request, response ) => {
 		response.status( 201 ).json( { // status 201: Recurso creado
 
 			ok: true,
-			usuario: usuarioCreado,
-			usuarioToken: request.usuario
+			hospital: hospitalCreado
 
 		} );
 
@@ -102,34 +100,34 @@ app.post( '/', middlewareAuth.verificaToken, ( request, response ) => {
 
 
 // ===========================================
-// actualizar usuarios
+// actualizar hospitales
 // ===========================================
 app.put( '/:id', middlewareAuth.verificaToken, ( request, response ) => {
 
 	var id = request.params.id; // obtener el id que viene como parametro
 
-	// averiguar si existe un usuario con el id
-	Usuario.findById( id, ( error, usuarioEncontrado ) => {
+	// averiguar si existe un hospital con el id
+	Hospital.findById( id, ( error, hospitalEncontrado ) => {
 
 		if( error ) {
 
 			return response.status( 500 ).json( { // status 500: Error interno del servidor
 
-				ok: false,
-				mensaje: 'Error al obtener usuario para actualizar.',
+				ok: false, 
+				mensaje: 'Error al obtener hospital para actualizar.',
 				errors: error
 
 			} );
 
 		}
 
-		if( !usuarioEncontrado ) {
+		if( !hospitalEncontrado ) {
 
 			return response.status( 400 ).json( { // status 400: Solicitud incorrecta
 
-				ok: false, 
-				mensaje: 'Error al actualizar usuario.',
-				errors: { message: 'No existe un usuario con el ID indicado.' }
+				ok: false,
+				mensaje: 'Error al actualizar hospital.',
+				errors: { message: 'No existe un hospital con el ID indicado.' }
 
 			} );
 
@@ -137,30 +135,27 @@ app.put( '/:id', middlewareAuth.verificaToken, ( request, response ) => {
 
 		var body = request.body;
 
-		usuarioEncontrado.nombre = body.nombre;
-		usuarioEncontrado.email = body.email;
-		usuarioEncontrado.role = body.role;
+		hospitalEncontrado.nombre = body.nombre;
+		hospitalEncontrado.usuario = request.usuario._id;
 
-		usuarioEncontrado.save( ( error, usuarioActualizado ) => {
+		hospitalEncontrado.save( ( error, hospitalActualizado ) => {
 
 			if( error ) {
 
 				return response.status( 400 ).json( { // status 400: Solicitud incorrecta
 
-					ok: false,
-					mensaje: 'Error al actualizar usuario.',
+					ok: false, 
+					mensaje: 'Error al actualizar hospital.',
 					errors: error
 
 				} );
 
 			}
 
-			usuarioActualizado.password = ':)';
+			response.status( 200 ).json( { // status 200: Ok
 
-			response.status( 200 ).json( { // status 200: ok
-
-				ok: true,
-				usuario: usuarioActualizado
+				ok: true, 
+				hospital: hospitalActualizado
 
 			} );
 
@@ -168,46 +163,47 @@ app.put( '/:id', middlewareAuth.verificaToken, ( request, response ) => {
 
 	} );
 
+
 } );
 
 
 // ===========================================
-// eliminar usuarios
+// eliminar hospitales
 // ===========================================
 app.delete( '/:id', middlewareAuth.verificaToken, ( request, response ) => {
 
 	var id = request.params.id;
 
-	Usuario.findByIdAndRemove( id, ( error, usuarioEliminado ) => {
+	Hospital.findByIdAndRemove( id, ( error, hospitalEliminado ) => {
 
 		if( error ) {
 
 			return response.status( 500 ).json( { // status 500: Error interno del servidor
 
 				ok: false, 
-				mensaje: 'Error al obtener usuario para eliminar.',
+				mensaje: 'Error al obtener hospital para eliminar.',
 				errors: error
 
 			} );
 
 		}
 
-		if( !usuarioEliminado ) {
+		if( !hospitalEliminado ) {
 
 			return response.status( 400 ).json( { // status 400: Solicitud incorrecta
 
 				ok: false, 
-				mensaje: 'Error al eliminar usuario.',
-				errors: { message: 'No existe un usuario con el ID indicado.' }
+				mensaje: 'Error al eliminar hospital.',
+				errors: { message: 'No existe un hospital con el ID indicado.' }
 
 			} );
 
 		}
 
-		response.status( 200 ).json( { // status 200: ok
+		response.status( 200 ).json( {
 
 			ok: true, 
-			usuario: usuarioEliminado
+			hospital: hospitalEliminado
 
 		} );
 

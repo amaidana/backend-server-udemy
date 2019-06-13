@@ -1,45 +1,66 @@
-// Requires: librerias
-var express = require( 'express' );
-var mongoose = require( 'mongoose' );
-var bodyParser = require( 'body-parser' );
+// Requires: importación de librerias
+var express = require( 'express' ); // libreria del servidor express
+var mongoose = require( 'mongoose' ); // libreria para conectar con BD de mongo
+var bodyParser = require( 'body-parser' ); // libreria para obtner los body de los requests
 
 
 // Inicializar variables
-var app = express();
+var app = express(); // inicializar servidor express
 
 
-// Body Parser
-// parse application/x-www-form-urlencoded
-app.use( bodyParser.urlencoded( { extended: false } ) );
-// parse application/json
-app.use( bodyParser.json() );
+// Configurar Body-Parser
+app.use( bodyParser.urlencoded( { extended: false } ) ); // Parse application/x-www-form-urlencoded
+app.use( bodyParser.json() ); // Parse application/json
 
 
 // Importar rutas
 var appRoutes = require( './routes/app' );
 var usuarioRoutes = require( './routes/usuario' );
+var hospitalRoutes = require( './routes/hospital' );
+var medicoRoutes = require( './routes/medico' );
+var busquedaRoutes = require( './routes/busqueda' );
+var uploadRoutes = require( './routes/upload' );
+var imgRoutes = require( './routes/imagenes' );
 var loginRoutes = require( './routes/login' );
 
 
-// Conexión a la base de datos
+// Conectar con la BD de mongo
 mongoose.connection.openUri( 'mongodb://localhost:27017/hospitalDB', ( error, response ) => {
 
-	if( error ) throw error; // si hay error de conexión mostramos el error y no hacemos más nada
+	if( error ) throw error;
 
-	console.log( 'Base de datos conectada: \x1b[32m%s\x1b[0m', 'online' );
+	console.log( 'Base de datos: \x1b[36m%s\x1b[0m', 'online' );
 
 } );
 
 
-// Rutas - middleware
+// ============================================================
+// Server index config 
+// Para visualizar el path de imagenes: localhost:3000/uploads
+// npm install serve-index --save
+// ============================================================
+/*
+var serveIndex = require( 'serve-index' );
+app.use( express.static( __dirname + '/' ) );
+app.use( '/uploads', serveIndex( __dirname + '/uploads' ) );
+*/
+
+
+// Rutas
 app.use( '/usuario', usuarioRoutes );
+app.use( '/hospital', hospitalRoutes );
+app.use( '/medico', medicoRoutes );
+app.use( '/busqueda', busquedaRoutes );
+app.use( '/upload', uploadRoutes );
+app.use( '/img', imgRoutes );
 app.use( '/login', loginRoutes );
+
 app.use( '/', appRoutes );
 
 
 // Escuchar peticiones
 app.listen( 3000, () => {
 
-	console.log( 'Express server corriendo en el puerto 3000: \x1b[32m%s\x1b[0m', 'online' );
+	console.log( 'Express server puerto 3000: \x1b[36m%s\x1b[0m', 'online' );
 
-} ); // escuchar en el puerto 3000
+} ); // poner a express a escuchar las peticiones del puerto 3000

@@ -1,20 +1,19 @@
-var mongoose = require( 'mongoose' );
-var uniqueValidator = require( 'mongoose-unique-validator' );
+var mongoose = require( 'mongoose' ); // libreria para conectar con BD de mongo
+var uniqueValidator = require( 'mongoose-unique-validator' ); // libreria para hacer validaciones de campo único
 
 var Schema = mongoose.Schema;
-
 
 var rolesValidos = {
 	values: [ 'ADMIN_ROLE', 'USER_ROLE' ],
 	message: '{VALUE} no es un rol permitido.'
 }
 
-
+// Definir el esquema del modelo Usuario
 var usuarioSchema = new Schema( {
 
-	nombre: { type: String, required: [ true, 'El campo nombre es obligatorio.' ] },
-	email: { type: String,  required: [ true, 'El campo email es obligatorio.' ], unique: true },
-	password: { type: String, required: [ true, 'El campo password es obligatorio.' ] },
+	nombre: { type: String, required: [ true, 'El campo nombre es requerido.' ] },
+	email: { type: String, unique: true, required: [ true, 'El campo correo es requerido.' ] },
+	password: { type: String, required: [ true, 'El campo contraseña es requerido.' ] },
 	img: { type: String, required: false },
 	role: { type: String, required: true, default: 'USER_ROLE', enum: rolesValidos }
 
