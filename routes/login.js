@@ -49,19 +49,40 @@ async function verify( token ) {
 
 app.post( '/google', async ( request, response ) => { // para poder usar el await debe estar dentro de un async
 
-	var token = request.body.token;
+	var token = request.body.token || '';
 
+	var googleUser;
+
+	try {
+
+		googleUser = await verify( token ); // llamar a la promesa verify
+
+	} catch( error ) {
+
+		return response.status( 403 ).json( { // status 403: Prohibido
+
+			ok: false, 
+			mensaje: 'Token no válido.',
+			errors: error
+
+		} );
+
+	}
+
+	/*
 	var googleUser = await verify( token ) // llamar a la promesa verify
-		.catch( error => {
+		.catch( ( error ) => {
 
 			return response.status( 403 ).json( { // status 403: Prohibido
 
 				ok: false,
-				mensaje: 'Token no válido.'
+				mensaje: 'Token no válido.',
+				errors: error
 
 			} );
 
 		} );
+	*/
 
 	// verificar si el correo ya está almacenado en la BD
 	Usuario.findOne( { email: googleUser.email }, ( error, usuarioEncontrado ) => {
@@ -80,28 +101,29 @@ app.post( '/google', async ( request, response ) => { // para poder usar el awai
 
 		if( usuarioEncontrado ) { // el usuario ya existe en la bd
 
-			// comprobar si el usuario se registro por google o no
+			// comprobar si el usuario se registró por google o no
 			if( usuarioEncontrado.google === false ) { // no fue registrado por google => no puede ingresar mediante google
 
 				return response.status( 400 ).json( { // status 400: Solicitud incorrecta
 
-					ok: false,
-					mensaje: 'No puede autenticarse mediante Google SignIn.',
-					errors: { mensaje: 'Debe autenticarse de manera normal.' }
+					ok: false, 
+					mensaje: 'No puede autenticarse mediante Google SingIn.',
+					errors: { mensaje: 'Debe autenticarse por el formulario de LogIn.' }
 
 				} );
 
 			} else { // fué registrado por google
 
-				// Crear un token que expira en 4 hs
+				// crear un token que expira en 4hs
 				var token = jwt.sign( { usuario: usuarioEncontrado }, SEED, { expiresIn: 14400 } );
 
 				response.status( 200 ).json( { // status 200: ok
 
-					ok: true,
+					ok: true, 
 					usuario: usuarioEncontrado,
 					token: token,
-					id: usuarioEncontrado._id
+					id: usuarioEncontrado._id,
+					menu: obtenerMenu( usuarioEncontrado.role )
 
 				} );
 
@@ -109,14 +131,14 @@ app.post( '/google', async ( request, response ) => { // para poder usar el awai
 
 		} else { // el usuario no existe en la bd
 
-			// crear usuario
+			// crear nuevo usuario
 			var usuario = new Usuario();
 
 			usuario.nombre = googleUser.nombre;
 			usuario.email = googleUser.email;
 			usuario.img = googleUser.img;
 			usuario.google = true;
-			usuario.password = ':)'
+			usuario.password = ':)';
 
 			usuario.save( ( error, usuarioCreado ) => {
 
@@ -140,23 +162,16 @@ app.post( '/google', async ( request, response ) => { // para poder usar el awai
 					ok: true,
 					usuario: usuarioCreado,
 					token: token,
-					id: usuarioCreado._id
+					id: usuarioCreado._id,
+					menu: obtenerMenu( usuarioCreado.role )
 
-				} );				
+				} );
 
 			} );
 
 		}
 
 	} );
-
-	/*
-	response.status( 200 ).json( { // status 200: Ok
-		ok: true,
-		mensaje: 'Login correcto',
-		googleUser: googleUser
-	} );
-	*/
 
 } );
 
@@ -188,7 +203,7 @@ app.post( '/', ( request, response ) => {
 			return response.status( 400 ).json( { // status 400: Solicitus incorrecta
 
 				ok: false, 
-				mensaje: 'Credenciales incorrectas - email.',
+				mensaje: 'Credenciales incorrectas (99).',
 				errors: error
 
 			} );
@@ -201,7 +216,7 @@ app.post( '/', ( request, response ) => {
 			return response.status( 400 ).json( { // status 400: Solicitus incorrecta
 
 				ok: false, 
-				mensaje: 'Credenciales incorrectas - password.',
+				mensaje: 'Credenciales incorrectas (98).',
 				errors: error
 
 			} );
@@ -218,13 +233,51 @@ app.post( '/', ( request, response ) => {
 			ok: true,
 			usuario: usuarioEncontrado,
 			token: token,
-			id: usuarioEncontrado._id
+			id: usuarioEncontrado._id,
+			menu: obtenerMenu( usuarioEncontrado.role )
 
 		} );
 
 	} );
 
 } );
+
+
+function obtenerMenu( role ) {
+
+	var menu = [
+		{
+			titulo: 'Principal',
+			icono: 'mdi mdi-gauge',
+			submenu: [
+				{ titulo: 'Dashboard', url: '/dashboard' },
+				{ titulo: 'ProgressBar', url: '/progress' },
+				{ titulo: 'Gráficas', url: '/graficas1' },
+				{ titulo: 'Promesas', url: '/promesas' },
+				{ titulo: 'Rxjs', url: '/rxjs' }
+			]
+		},
+		{
+			titulo: 'Mantenimientos',
+			icono: 'mdi mdi-folder-lock-open',
+			submenu: [
+				//{ titulo: 'Usuarios', url: '/usuarios' },
+				{ titulo: 'Medicos', url: '/medicos' },
+				{ titulo: 'Hospitales', url: '/hospitales' }
+			]
+		}
+	];
+
+	if( role === 'ADMIN_ROLE' ) {
+
+		// agregar al principio del array menu[1].submenu
+		menu[1].submenu.unshift( { titulo: 'Usuarios', url: '/usuarios' } );
+
+	}
+
+	return menu;
+
+}
 
 
 module.exports = app;

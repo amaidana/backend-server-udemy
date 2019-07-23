@@ -17,12 +17,15 @@ var Hospital = require( '../models/hospital' );
 // ===========================================
 app.get( '/', ( request, response ) => {
 
-	var desde = request.query.desde || 0;
-	desde = Number( desde );
+	var start = request.query.start || 0;
+			start = Number( start );
+
+	var limit = request.query.limit || 0;
+			limit = Number( limit );
 
 	Hospital.find( {} )
-		.skip( desde ) // desde que número de registro empezar
-		.limit( 5 ) // 5 registros por página
+		.skip( start ) // desde que número de registro empezar
+		.limit( limit ) // 5 registros por página
 		.populate( 'usuario', 'nombre email' ) // para obtener usuario relacionado
 		.exec( ( error, hospitales ) => {
 
@@ -38,11 +41,11 @@ app.get( '/', ( request, response ) => {
 				} );
 
 			}
-
-			Hospital.count( {}, ( error, cantReg ) => {
+		
+			Hospital.countDocuments( {}, function( error, cantReg ) {
 
 				// enviar respuesta
-				response.status( 200 ).json( { // status 200: Ok
+				response.status( 200 ).json( { // status 200: ok
 
 					ok: true,
 					hospitales: hospitales,
@@ -56,6 +59,52 @@ app.get( '/', ( request, response ) => {
 
 } );
 
+
+// ===========================================
+// obtener hospital por id
+// ===========================================
+app.get( '/:id', ( request, response ) => {
+
+	var id = request.params.id;
+
+	Hospital.findById( id )
+		.populate( 'usuario', 'nombre img email' )
+		.exec( ( error, hospitalEncontrado ) => {
+
+			if( error ) {
+
+				return response.status( 500 ).json( { // status 500: Error interno del servidor
+				
+					ok: false,
+					mensaje: 'Error al buscar hospital.',
+					errors: error
+				
+				} );
+
+			}
+
+			if( !hospitalEncontrado ) {
+
+				return response.status( 400 ).json( { // status 400: solicitud incorrecta
+
+					ok: false, 
+					mensaje: 'Error al obtener usuario.',
+					errorrs: { mesage: 'No existe un usuario con el ID indicado.' }
+
+				} );
+
+			}
+
+			response.status( 200 ).json( {
+
+				ok: true,
+				hospital: hospitalEncontrado
+
+			} );
+
+		} );
+
+} );
 
 // ===========================================
 // crear hospitales

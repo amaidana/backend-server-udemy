@@ -8,6 +8,19 @@ var bodyParser = require( 'body-parser' ); // libreria para obtner los body de l
 var app = express(); // inicializar servidor express
 
 
+// ====================================
+// Middleware para el tema del CORS
+// ====================================
+app.use( function( request, response, next ) {
+
+  response.header( "Access-Control-Allow-Origin", "*" );
+  response.header( "Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept" );
+  response.header( "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS" );
+  next();
+
+} );
+
+
 // Configurar Body-Parser
 app.use( bodyParser.urlencoded( { extended: false } ) ); // Parse application/x-www-form-urlencoded
 app.use( bodyParser.json() ); // Parse application/json
@@ -24,8 +37,10 @@ var imgRoutes = require( './routes/imagenes' );
 var loginRoutes = require( './routes/login' );
 
 
+mongoose.set( 'useCreateIndex', true );
+
 // Conectar con la BD de mongo
-mongoose.connection.openUri( 'mongodb://localhost:27017/hospitalDB', ( error, response ) => {
+mongoose.connection.openUri( 'mongodb://localhost:27017/hospitalDB', { useNewUrlParser: true }, ( error, response ) => {
 
 	if( error ) throw error;
 

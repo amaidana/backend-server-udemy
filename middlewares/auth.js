@@ -16,8 +16,8 @@ exports.verificaToken = function( request, response, next ) {
 			return response.status( 401 ).json( { // status 401: No autorizado
 
 				ok: false, 
-				mensaej: 'Token incorrecto',
-				errorr: error
+				mensaje: 'Token incorrecto',
+				errors: error
 
 			} );
 
@@ -29,5 +29,42 @@ exports.verificaToken = function( request, response, next ) {
 		next();
 
 	} );
+
+}
+
+
+// ===============================================
+// verificar que el usuario sea ADMIN_ROLE
+// verificar que el usuario sea el mismo logueado
+// ===============================================
+exports.verificaRole = function( request, response, next ) {
+
+	var usuario = request.usuario;
+	var id = request.params.id;
+
+  if( usuario.role === 'ADMIN_ROLE' || usuario._id === id ) {
+
+		next();
+		return;
+
+  } else {
+
+  	var msg = 'Debe tener permisos de administrador.';
+
+		if( usuario._id !== id ) {
+
+			var msg = 'Solo puede actualizar su usuario.';
+
+		}
+
+		return response.status( 401 ).json( { // status 401: No autorizado
+
+			ok: false, 
+			mensaje: 'Token incorrecto',
+			errors: { message: msg }
+
+		} );
+
+  }
 
 }

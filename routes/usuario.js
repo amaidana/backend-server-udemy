@@ -18,9 +18,9 @@ var Usuario = require( '../models/usuario' );
 app.get( '/', ( request, response ) => {
 
 	var desde = request.query.desde || 0;
-	desde = Number( desde );
+			desde = Number( desde );
 
-	Usuario.find( {}, 'nombre email img role' )
+	Usuario.find( {}, 'nombre email img role google' )
 		.skip( desde ) // desde que número de registro empezar
 		.limit( 5 ) // 5 registros por página
 		.exec( ( error, usuarios ) => {
@@ -38,7 +38,7 @@ app.get( '/', ( request, response ) => {
 
 			}
 
-			Usuario.count( {}, ( error, cantReg ) => {
+			Usuario.countDocuments( {}, ( error, cantReg ) => {
 
 				// enviar respuesta
 				response.status( 200 ).json( { // status 200: OK
@@ -59,7 +59,7 @@ app.get( '/', ( request, response ) => {
 // ===========================================
 // crear usuarios
 // ===========================================
-app.post( '/', middlewareAuth.verificaToken, ( request, response ) => {
+app.post( '/', ( request, response ) => {
 
 	var body = request.body; // solo funciona con el body-parser
 
@@ -104,7 +104,7 @@ app.post( '/', middlewareAuth.verificaToken, ( request, response ) => {
 // ===========================================
 // actualizar usuarios
 // ===========================================
-app.put( '/:id', middlewareAuth.verificaToken, ( request, response ) => {
+app.put( '/:id', [ middlewareAuth.verificaToken, middlewareAuth.verificaRole ], ( request, response ) => {
 
 	var id = request.params.id; // obtener el id que viene como parametro
 
@@ -174,7 +174,7 @@ app.put( '/:id', middlewareAuth.verificaToken, ( request, response ) => {
 // ===========================================
 // eliminar usuarios
 // ===========================================
-app.delete( '/:id', middlewareAuth.verificaToken, ( request, response ) => {
+app.delete( '/:id', [ middlewareAuth.verificaToken, middlewareAuth.verificaRole ], ( request, response ) => {
 
 	var id = request.params.id;
 

@@ -14,31 +14,30 @@ var Usuario = require( '../models/usuario' );
 // ===========================================
 // obtener resultado de busqueda por colección
 // ===========================================
-app.get( '/coleccion/:tabla/:busqueda', ( request, response ) => {
+app.get( '/coleccion/:table/:content', ( request, response ) => {
 
-	var busqueda = request.params.busqueda;
-	var tabla = request.params.tabla;
-	var expreg = new RegExp( busqueda, 'i' );
+	var content = new RegExp( request.params.content, 'i' ); // contenido a buscar
+	var table   = request.params.table; // colección en la que buscar
 
 	var promesa;
 
-	switch( tabla ) {
+	switch( table ) {
 
 		case 'usuarios':
 
-			promesa = buscarUsuarios( busqueda, expreg );
+			promesa = buscarUsuarios( content );
 
 			break;
 
 		case 'medicos':
 
-			promesa = buscarMedicos( busqueda, expreg );
+			promesa = buscarMedicos( content );
 
 			break;
 
 		case 'hospitales':
 
-			promesa = buscarHospitales( busqueda, expreg );
+			promesa = buscarHospitales( content );
 
 			break;
 
@@ -55,11 +54,11 @@ app.get( '/coleccion/:tabla/:busqueda', ( request, response ) => {
 	}
 
 	promesa.then( data => {
-
+		
 		response.status( 200 ).json( { // status 200: Ok
-
+			
 			ok: true,
-			[tabla]: data
+			[table]: data
 
 		} );
 
@@ -71,15 +70,14 @@ app.get( '/coleccion/:tabla/:busqueda', ( request, response ) => {
 // ===========================================
 // obtener resultado de busqueda general
 // ===========================================
-app.get( '/todo/:busqueda', ( request, response ) => {
+app.get( '/todo/:content', ( request, response ) => {
 
-	var busqueda = request.params.busqueda;
-	var expreg = new RegExp( busqueda, 'i' ); // expresión regular para que la busqueda no sea case sensitive
+	var content = new RegExp( request.params.content, 'i' ); // expresión regular para que la busqueda no sea case sensitive
 
 	Promise.all( [ 
-		buscarHospitales( busqueda, expreg ), 
-		buscarMedicos( busqueda, expreg ),
-		buscarUsuarios( busqueda, expreg ) ] 
+		buscarHospitales( content ), 
+		buscarMedicos( content ),
+		buscarUsuarios( content ) ] 
 	).then( respuestas => {
 
 		response.status( 200 ).json( {
@@ -96,23 +94,29 @@ app.get( '/todo/:busqueda', ( request, response ) => {
 } );
 
 
-function buscarHospitales( busqueda, expreg ) {
+function buscarHospitales( content ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		Hospital.find( { nombre: expreg } )
+		Hospital.find( { nombre: content } )
 			.populate( 'usuario', 'nombre email' )
 			.exec( ( error, hospitales ) => {
 
-			if( error ) {
+				if( error ) {
 
-				reject( 'Ha ocurrido un error al buscar hospitales.', error );
+					reject( 'Ha ocurrido un error al buscar hospitales.', error );
 
-			} else {
+				}
 
-				resolve( hospitales );
+				if( error ) {
 
-			}
+					reject( 'Ha ocurrido un error al buscar hospitales.', error );
+
+				} else {
+
+					resolve( hospitales );
+
+				}
 
 		} );
 
@@ -120,14 +124,37 @@ function buscarHospitales( busqueda, expreg ) {
 
 }
 
-function buscarMedicos( busqueda, expreg ) {
+function buscarMedicos( content ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		Medico.find( { nombre: expreg } )
-			.populate( 'usuario', 'nombre email' )
+		Medico.find( { nombre: content } )
+			.populate( 'usuario', 'nombre email img' )
 			.populate( 'hospital' )
 			.exec( ( error, medicos ) => {
+
+			/*
+			// ===============================================
+			// Hacer esto para  obtener el total de registros
+			// ===============================================
+
+			if( error ) {
+
+				reject( 'Ha ocurrido un error al buscar medicos.', error );
+
+			}
+			
+			Medico.countDocuments( { [filter]: content }, function( error, cantReg ) {
+
+				let data = {
+					data: medicos, 
+					cantReg: cantReg
+				}
+				
+				resolve( data );
+
+			} );
+			*/
 
 			if( error ) {
 
@@ -145,12 +172,12 @@ function buscarMedicos( busqueda, expreg ) {
 
 }
 
-function buscarUsuarios( busqueda, expreg ) {
+function buscarUsuarios( content ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		Usuario.find( {}, 'nombre email role' )
-			.or( [ { 'nombre': expreg }, { 'email': expreg } ] ) // buscar por email y por nombre solamente
+		Usuario.find( {}, 'nombre email role img' )
+			.or( [ { 'nombre': content }, { 'email': content } ] ) // buscar por email y por nombre solamente
 			.exec( ( error, usuarios ) => {
 
 				if( error ) {

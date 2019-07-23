@@ -40,7 +40,7 @@ app.get( '/', ( request, response ) => {
 
 			}
 
-			Medico.count( {}, ( error, cantReg ) => {
+			Medico.countDocuments( {}, ( error, cantReg ) => {
 
 				// enviar respuesta
 				response.status( 200 ).json( { // status 200: Ok
@@ -50,6 +50,55 @@ app.get( '/', ( request, response ) => {
 					numRows: cantReg
 
 				} );
+
+			} );
+
+		} );
+
+} );
+
+
+// ===========================================
+// obtener medico por el id
+// ===========================================
+app.get( '/:id', ( request, response ) => {
+
+	var id = request.params.id; // obtener el id que viene como parametro
+
+	// averiguar si existe un medico con el id
+	Medico.findById( id )
+		.populate( 'usuario', 'nombre email img' )
+		.populate( 'hospital' )
+		.exec( ( error, medicoEncontrado ) => {
+
+			if( error ) {
+
+				return response.status( 500 ).json( { // status 500: Error interno del servidor
+
+					ok: false, 
+					mensaje: 'Error al obtener médico.',
+					errors: error
+
+				} );
+
+			}
+
+			if( !medicoEncontrado ) {
+
+				return response.status( 400 ).json( { // status 400: Solicitud incorrecta
+
+					ok: false,
+					mensaje: 'Error al obtener médico.',
+					errors: { message: 'No existe un médico con el ID indicado.' }
+
+				} );
+
+			}
+
+			response.status( 200 ).json( { // status 200: Ok
+
+				ok: true, 
+				medico: medicoEncontrado
 
 			} );
 

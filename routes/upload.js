@@ -17,12 +17,12 @@ app.use( fileUpload() );
 
 app.put( '/:tipo/:id', ( request, response ) => {
 
-	var tipo = request.params.tipo; // usuario, medico u hospital
+	var tipo = request.params.tipo; // usuarios, medicos u hospitales
 	var id = request.params.id; // id de tipo
 
 	var tiposValidos = [ 'hospitales', 'medicos', 'usuarios' ];
 
-	if( tiposValidos.indexOf( tipo ) < 0 ) {
+	if( tiposValidos.indexOf( tipo ) < 0 ) { // si viene otra cosa que no sea hospitales, medicos o usuarios
 
 		return response.status( 400 ).json( { // status 400: Solicitud incorrecta
 
@@ -59,7 +59,7 @@ app.put( '/:tipo/:id', ( request, response ) => {
 
 		response.status( 400 ).json( { // status 400: Solicitud incorrecta
 
-			ok: true,
+			ok: false,
 			mensaje: 'El archivo ingresado no es una imagen.',
 			errors: { message: 'Extensión de archivo debe estar estar entre ' + extencionesValidas.join( ', ' ) }
 
