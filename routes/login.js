@@ -19,6 +19,25 @@ var CLIENT_ID = require( '../config/config' ).CLIENT_ID;
 const { OAuth2Client } = require( 'google-auth-library' );
 const client = new OAuth2Client( CLIENT_ID );
 
+var middlewareAuth = require( '../middlewares/auth' ); // middleware de autentiación
+
+// =============================================
+// Renovar token
+// =============================================
+app.get( '/renovarToken', middlewareAuth.verificaToken, ( request, response ) => {
+
+	// crear un token que expira en 4hs
+	var token = jwt.sign( { usuario: request.usuario }, SEED, { expiresIn: 14400 } );
+
+	response.status( 200 ).json( {
+
+		ok: true, 
+		token: token
+
+	} );
+
+} );
+
 
 // =============================================
 // Autenticación de Google
